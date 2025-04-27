@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="chat-container">
+        <!-- Заголовок чата с названием, количеством участников и крестиком -->
+        <div class="chat-header">
+            <div>
+                <h2>{{ channel.name }}</h2>
+                <span>Количество участников: {{ channel.users.count }}</span>
+            </div>
+            <a href="{% url 'channels' %}" class="close-btn">&times;</a>
+        </div>
+
+        <!-- Блок сообщений -->
+        <div class="chat-messages">
+            {% for message in messages %}
+                <div class="message-block">
+                    <div class="message-header">
+                        <strong>От: {{ message.user.username|default:"пользователь удален" }}</strong>
+                    </div>
+                    <div class="message-content">
+                        {{ message.content }}
+                    </div>
+                    <div class="message-time">
+                        <span class="text-muted">{{ message.time_create|date:"H:i" }}</span>
+                    </div>
+                </div>
+            {% empty %}
+                <p>В этом чате пока нет сообщений.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Поле ввода сообщения -->
+        <div class="chat-input">
+            <input type="text" name="content" placeholder="Введите сообщение..." required>
+            <button type="submit" class="send-btn">Отправить</button>
+        </div>
+    </div>
+{% endblock %}

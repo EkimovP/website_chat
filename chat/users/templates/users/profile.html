@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container-card">
+        <div class="card">
+            <h1 class="text-center mb-4">{{ title }}</h1>
+            <form class="row g-3" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="col-12 form-group text-center">
+                    {% if user.photo %}
+                        <img src="{{ user.photo.url }}" alt="User Photo" class="profile-photo">
+                    {% else %}
+                        <img src="{{ default_image }}" alt="Default Photo" class="profile-photo">
+                    {% endif %}
+                </div>
+
+                {% if user.is_moderator %}
+                    <div class="col-12 text-center g-1">
+                        <h4><span class="badge bg-success">Модератор</span></h4>
+                    </div>
+                {% endif %}
+
+                {% if user.is_blocked %}
+                    <div class="col-12 text-center g-1">
+                        <h4><span class="badge bg-danger">Заблокирован</span></h4>
+                    </div>
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-error text-danger mt-1">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                {% for f in form %}
+                    <div class="col-12 form-group {% if f.errors %}has-error{% endif %}">
+                        <label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}:</label>
+                            {% if f.name == 'photo' %}
+                                <div class="photo-upload-group">
+                                    <div class="photo-input-wrapper">
+                                        <div class="photo-actions">
+                                            <label for="id_photo" class="btn btn-outline-secondary">
+                                                <span>Выберите файл, затем нажмите сохранить</span>
+                                                {{ f }}
+                                            </label>
+                                            {% if user.photo %}
+                                                <div class="form-check photo-clear-checkbox">
+                                                    <input type="checkbox" name="photo-clear" id="photo-clear" class="form-check-input">
+                                                    <label class="form-check-label" for="photo-clear">Очистить фото</label>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {{ f }}
+                            {% endif %}
+                        {% if f.errors %}
+                            <div class="form-error text-danger mt-1">
+                                {{ f.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="d-grid col-12">
+                    <button type="submit" class="btn btn-dark">Сохранить</button>
+                </div>
+            </form>
+            <p class="forgot-password-wrapper text-center mt-3">
+                <a class="forgot-password-link" href="{% url 'users:password_change' %}">Cменить пароль</a>
+            </p>
+        </div>
+    </div>
+{% endblock %}
