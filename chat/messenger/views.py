@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.http import HttpResponseNotFound, JsonResponse
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView
+from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView, UpdateView, DeleteView
 
 from .forms import AddChannelForm, FeedbackForm
 from .models import Channel, Message
@@ -47,12 +48,45 @@ class AddChannelFormView(LoginRequiredMixin, DataMixin, CreateView):
     template_name = 'messenger/add_channel.html'
     title_page = 'Создание канала'
 
+    def form_valid(self, form):
+        channel = form.save(commit=False)
+        channel.creator = self.request.user
+        channel.save()
+        # Т.к. имеется поле многие ко многим
+        form.save_m2m()
+        return super().form_valid(form)
 
+
+@login_required
 def user_search(request):
     term = request.GET.get('q', '')
     users = get_user_model().objects.filter(username__icontains=term)[:10]
     results = [{'id': user.id, 'text': user.username} for user in users]
     return JsonResponse({'results': results})
+
+
+class UpdateChannelFormView(LoginRequiredMixin, DataMixin, UpdateView):
+    form_class = AddChannelForm
+    template_name = 'messenger/add_channel.html'
+    title_page = 'Редактирование канала'
+    slug_url_kwarg = 'update_slug'
+
+    def get_queryset(self):
+        return Channel.objects.filter(creator=self.request.user)
+
+    def get_success_url(self):
+        return reverse_lazy('chat', kwargs={'chat_slug': self.object.slug})
+
+
+class DeleteChannelView(LoginRequiredMixin, DataMixin, DeleteView):
+    model = Channel
+    template_name = 'messenger/delete_channel.html'
+    success_url = reverse_lazy('channels')
+    title_page = 'Удаление канала'
+    slug_url_kwarg = 'delete_slug'
+
+    def get_queryset(self):
+        return Channel.objects.filter(creator=self.request.user)
 
 
 class ShowChannelsView(DataMixin, ListView):
@@ -73,7 +107,8 @@ class ShowChatView(DataMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['messages'] = Message.objects.filter(channel=context['channel']).order_by('time_create')
+        context['messages'] = (Message.objects.filter(channel=context['channel']).select_related('user')
+                               .order_by('time_create')[:100])
         # title - ключ, который сформируется
         return self.get_mixin_context(context, title=f"Чат - {context['channel'].name}")
 

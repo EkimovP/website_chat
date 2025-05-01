@@ -6,12 +6,12 @@ from .models import Channel, Message
 
 @admin.register(Channel)
 class ChannelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_private', 'short_description', 'creation', 'display_users')
+    list_display = ('name', 'is_private', 'creator', 'short_description', 'creation', 'display_users')
     list_display_links = ('name',)
     search_fields = ('name',)
-    list_filter = ('name', 'creation', 'is_private')
+    list_filter = ('creation', 'is_private')
     list_editable = ('is_private',)
-    readonly_fields = ('creation',)
+    readonly_fields = ('creation', 'creator')
     fields = ('name', 'slug', 'description', 'is_private', 'users')
     filter_horizontal = ('users',)
     ordering = ['-creation', 'name']

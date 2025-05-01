@@ -6,7 +6,18 @@
         <div class="chat-header">
             <div>
                 <h2>{{ channel.name }}</h2>
-                <span>Количество участников: {{ channel.users.count }}</span>
+                <span>Создатель канала: <strong>{{ channel.creator|default:"Пользователь удален" }}</strong>.</span><br>
+                <span>Количество участников: {{ channel.users.count }}.</span>
+            </div>
+            <div>
+                {% if channel.creator == user %}
+                    <a href="{% url 'update_channel' channel.slug %}" class="btn btn-outline-primary btn-sm">
+                        Редактировать
+                    </a>
+                    <a href="{% url 'delete_channel' channel.slug %}" class="btn btn-outline-danger btn-sm">
+                        Удалить
+                    </a>
+                {% endif %}
             </div>
             <a href="{% url 'channels' %}" class="close-btn">&times;</a>
         </div>
@@ -16,7 +27,7 @@
             {% for message in messages %}
                 <div class="message-block">
                     <div class="message-header">
-                        <strong>От: {{ message.user.username|default:"пользователь удален" }}</strong>
+                        <strong>От: {{ message.user.username|default:"Пользователь удален" }}</strong>
                     </div>
                     <div class="message-content">
                         {{ message.content }}

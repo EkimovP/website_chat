@@ -25,7 +25,7 @@ class User(AbstractUser):
     is_blocked = models.BooleanField(default=False, verbose_name='заблокирован')
     photo = models.ImageField(blank=True, null=True, upload_to="photo/%Y/%m/%d/", verbose_name='фото')
     date_birth = models.DateField(blank=True, null=True, verbose_name='дата рождения')
-    content = models.TextField(blank=True, verbose_name='дополнительная информация')
+    content = models.TextField(max_length=2000, blank=True, verbose_name='дополнительная информация')
 
     # objects = CustomUserManager()
     # moderators = ModeratorsManager()

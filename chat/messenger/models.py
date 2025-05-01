@@ -13,9 +13,11 @@ class Channel(models.Model):
         PUBLIC = 0, 'Публичный'
         PRIVATE = 1, 'Приватный'
 
+    creator = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, related_name='created_channels',
+                                verbose_name='создатель')
     name = models.CharField(max_length=100, unique=True, db_index=True, verbose_name='название канала')
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name='url')
-    description = models.TextField(blank=True, verbose_name='описание канала')
+    description = models.TextField(max_length=1000, blank=True, verbose_name='описание канала')
     is_private = models.BooleanField(choices=tuple(map(lambda x: (bool(x[0]), x[1]), Status.choices)),
                                      default=Status.PUBLIC, verbose_name="статус канала")
     creation = models.DateTimeField(auto_now_add=True, verbose_name='создан')
@@ -37,7 +39,7 @@ class Channel(models.Model):
 
 
 class Message(models.Model):
-    content = models.TextField(verbose_name='сообщение')
+    content = models.TextField(max_length=5000, verbose_name='сообщение')
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='создано')
     time_update = models.DateTimeField(auto_now=True, verbose_name='обновлено')
     is_edited = models.BooleanField(default=False, verbose_name='редактировано')
