@@ -5,8 +5,10 @@
         <div class="card">
             <h1 class="text-center mb-4">{{ title }}</h1>
             <form class="row g-3"
-                  action="{% if form.instance.pk %}{% url 'update_channel' form.instance.slug %}
-                          {% else %}{% url 'add_channel' %}{% endif %}" method="post">
+                  action="
+                  {% if form.instance.pk %}{% url 'update_channel' form.instance.slug %}
+                  {% else %}{% url 'add_channel' %}{% endif %}"
+                  method="post">
                 {% csrf_token %}
 
                 {% if form.non_field_errors %}
@@ -28,7 +30,9 @@
                 {% endfor %}
 
                 <div class="d-grid col-12">
-                    <button type="submit" class="btn btn-dark">{% if form.instance.pk %}Обновить{% else %}Добавить{% endif %}</button>
+                    <button type="submit" class="btn btn-dark">
+                        {% if form.instance.pk %}Обновить{% else %}Добавить{% endif %}
+                    </button>
                 </div>
             </form>
         </div>

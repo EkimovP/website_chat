@@ -77,6 +77,12 @@ class UpdateChannelFormView(LoginRequiredMixin, DataMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('chat', kwargs={'chat_slug': self.object.slug})
 
+    def get(self, request, *args, **kwargs):
+        try:
+            return super().get(request, *args, **kwargs)
+        except Channel.DoesNotExist:
+            return HttpResponseNotFound('Канал не найден')
+
 
 class DeleteChannelView(LoginRequiredMixin, DataMixin, DeleteView):
     model = Channel
@@ -87,6 +93,12 @@ class DeleteChannelView(LoginRequiredMixin, DataMixin, DeleteView):
 
     def get_queryset(self):
         return Channel.objects.filter(creator=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.creator != request.user:
+            return HttpResponseNotFound('У вас нет прав для удаления этого канала')
+        return super().get(request, *args, **kwargs)
 
 
 class ShowChannelsView(DataMixin, ListView):
