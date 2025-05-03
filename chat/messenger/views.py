@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponseNotFound, JsonResponse, HttpResponseForbidden
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView, UpdateView, DeleteView
 
@@ -111,7 +111,7 @@ class ShowChannelsView(DataMixin, ListView):
         return Channel.public_channels.all()
 
 
-class ShowChatView(DataMixin, DetailView):
+class ShowChatView(LoginRequiredMixin, DataMixin, DetailView):
     model = Channel
     template_name = 'messenger/chat.html'
     slug_url_kwarg = 'chat_slug'
@@ -123,6 +123,13 @@ class ShowChatView(DataMixin, DetailView):
                                .order_by('time_create')[:100])
         # title - ключ, который сформируется
         return self.get_mixin_context(context, title=f"Чат - {context['channel'].name}")
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.object.users.filter(id=request.user.id).exists():
+            return HttpResponseForbidden("Вы не участник этого канала")
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
 
 def pageNotFound(request, exception):

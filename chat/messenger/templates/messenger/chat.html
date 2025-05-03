@@ -23,7 +23,7 @@
         </div>
 
         <!-- Блок сообщений -->
-        <div class="chat-messages">
+        <div class="chat-messages" id="chat-messages">
             {% for message in messages %}
                 <div class="message-block">
                     <div class="message-header">
@@ -43,8 +43,83 @@
 
         <!-- Поле ввода сообщения -->
         <div class="chat-input">
-            <input type="text" name="content" placeholder="Введите сообщение..." required>
-            <button type="submit" class="send-btn">Отправить</button>
+            <form id="chat-form">
+                {% csrf_token %}
+                <input type="text" name="content" id="message-input" placeholder="Введите сообщение..." required>
+                <button type="submit" class="send-btn">Отправить</button>
+            </form>
         </div>
     </div>
+
+    <!-- JavaScript для WebSocket -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Подключаемся к WebSocket
+            const channelSlug = "{{ channel.slug }}";
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = `${wsProtocol}${window.location.host}/ws/channel/${channelSlug}/`;
+            const socket = new WebSocket(wsUrl);
+
+            // Элементы DOM
+            const chatMessages = document.getElementById('chat-messages');
+            const chatForm = document.getElementById('chat-form');
+            const messageInput = document.getElementById('message-input');
+
+            // Обработка открытия соединения
+            socket.onopen = function () {
+                console.log('WebSocket connected');
+            };
+
+            // Обработка получения сообщений
+            socket.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                const messageBlock = document.createElement('div');
+                messageBlock.className = 'message-block';
+                messageBlock.innerHTML = `
+                    <div class="message-header">
+                        <strong>От: ${data.username}</strong>
+                    </div>
+                    <div class="message-content">
+                        ${data.message}
+                    </div>
+                    <div class="message-time">
+                        <span class="text-muted">${data.time_create}</span>
+                    </div>
+                `;
+                chatMessages.appendChild(messageBlock);
+                chatMessages.scrollTop = chatMessages.scrollHeight; // Прокрутка вниз
+            };
+
+            // Обработка закрытия соединения
+            socket.onclose = function (event) {
+                console.log('WebSocket closed with code:', event.code);
+            };
+
+            // Обработка ошибок
+            socket.onerror = function (error) {
+                console.error('WebSocket error:', error);
+            };
+
+            // Отправка сообщения при submit формы
+            chatForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const message = messageInput.value.trim();
+                if (message && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        'message': message
+                    }));
+                    messageInput.value = ''; // Очищаем поле ввода
+                }
+            });
+        });
+    </script>
+
+    <!-- Стили для прокрутки сообщений -->
+    <style>
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+    </style>
 {% endblock %}
